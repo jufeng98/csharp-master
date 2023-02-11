@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <title>测试硬件功能</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+</head>
+<body>
+    <div id="vue">
+        <div style="width:95%;margin: auto">
+            <h1>测试打印功能</h1>
+            <label>选择打印机</label>
+            <select id="printers" v-model="printerIndex" @change="printerChange()">
+                <option v-for="(name,index) in printerNames" :value="index">{{name}}</option>
+            </select>
+            <label>选择纸张</label>
+            <select id="papers" @change="paperChange()" v-model="paperIndex">
+                <option v-for="(paper,index) in papers" :value="index">{{paper.PaperName}}</option>
+            </select>
+            <label>打印来源</label>
+            <select id="printSource" @change="printSourceChange()" v-model="printSource">
+                <option v-for="item in printSources" :value="item.source">{{item.label}}</option>
+            </select>
+            <br />
+            <label>打印内容模版</label>
+            <br />
+            <textarea id="content" rows="20" cols="60" v-model="content"></textarea>
+            <br />
+            <button @click="printLabel('PREVIEW')">打印预览</button>
+            <button @click="printLabel('PRINT')">直接打印</button>
+        </div>
+    </div>
+    <script type="text/javascript">
+        new Vue({
+            el: "#vue",
+            data: {
+                schemeObj: {
+                    "remark": "这是备注",
+                    "productionLineName": "这是名称",
+                    "currentPlanList": [
+                        {
+                            "processName": "方式1",
+                            "processItemName": "名称1"
+                        },
+                        {
+                            "processName": "方式2",
+                            "processItemName": "名称2"
+                        },
+                        {
+                            "processName": "方式3",
+                            "processItemName": "名称3"
+                        },
+                    ],
+                    "packageType": "测试类型",
+                    "additionalServiceInfo": "这是服务",
+                    "appointmentBackTime": "2023-02-20 10:00:00"
+                },
+                obj: {},
+                printSource: '',
+                printSources: [
+                    { source: 'SCHEME_LABEL', label: '方案标签打印' },
+                ],
+                printerNames: [],
+                printerIndex: 0,
+                papers: [],
+                paperIndex: 0,
+                images: [],
+                content: ''
+            },
+            methods: {
+                connWs(openCallback, messageCallback) {
+                    let url = 'ws://localhost:8898/CsharpMaster'
+                    let socket = new WebSocket(url);
+                    socket.onmessage = event => {
+                        const resData = event.data;
+                        messageCallback(resData, socket);
+                    };
+                    socket.onopen = () => {
+                        console.log("ws Connection established.");
+                        openCallback(socket)
+                    };
+                    socket.onerror = () => {
+                        console.log("ews Connection error.");
+                    };
+                    socket.onclose = event => {
+                        console.log("ws close: " + event.wasClean + " code=" + event.code + " reason=" + event.reason);
+                    };
+                },
+                blobToBase64(blob) {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    reader.onload = (e) => {
+                        let base64 = e.target.result;
+                        this.images.push(base64)
+                    }
+                },
+                getPrinters() {
+                    this.connWs(socket => {
+                        socket.send("printerList")
+                    }, resData => {
+                        console.log("receive res: ", resData);
+                        this.printerNames = JSON.parse(resData);
+                        let tmp = localStorage.getItem("printerIndex")
+                        if (tmp && tmp.length > 0) {
+                            this.printerIndex = parseInt(tmp);
+                        }
+                        localStorage.setItem("printerIndex", this.printerIndex)
+                        this.getPapers(this.printerIndex)
+                    })
+                },
+                getPapers(printerIndex) {
+                    this.connWs(socket => {
+                        socket.send("paperList:" + printerIndex)
+                    }, resData => {
+                        console.log("receive res: ", resData);
+                        this.papers = JSON.parse(resData);
+                        let tmp = localStorage.getItem("paperIndex")
+                        if (tmp && tmp.length > 0) {
+                            this.paperIndex = parseInt(tmp);
+                        }
+                    })
+                },
+                printerChange() {
+                    localStorage.setItem("printerIndex", this.printerIndex)
+                    this.paperIndex = 0;
+                    localStorage.setItem("paperIndex", this.paperIndex)
+                    this.getPapers(this.printerIndex)
+                },
+                paperChange() {
+                    localStorage.setItem("paperIndex", this.paperIndex)
+                    let paperName = this.papers[this.paperIndex].PaperName
+                    for (let i = 0; i < this.printSources.length; i++) {
+                        if (this.printSources[i].label.includes(paperName)) {
+                            this.printSource = this.printSources[i].source
+                            this.printSourceChange()
+                            break
+                        }
+                    }
+
+                },
+                printSourceChange() {
+                    localStorage.setItem("printSource", this.printSource)
+                    this.switchContent(this.printSource)
+                },
+                printLabel(model) {
+                    let obj = JSON.parse(this.content)
+                    obj.printerIndex = parseInt(this.printerIndex)
+                    obj.paperName = this.papers[this.paperIndex].PaperName
+                    obj.model = model
+                    this.connWs(socket => {
+                        let data = `printSource:${localStorage.getItem("printSource")}~${JSON.stringify(obj)}`;
+                        socket.send(data);
+                    }, resData => {
+                        console.log("receive res: ", resData);
+                    })
+                },
+                switchContent(printSource) {
+                    if (printSource === this.printSources[0].source) {
+                        this.obj = this.schemeObj
+                    }
+                    this.content = JSON.stringify(this.obj, null, '  ')
+                },
+            },
+            mounted() {
+                this.getPrinters();
+                this.printSource = localStorage.getItem("printSource");
+                if (!this.printSource) {
+                    this.printSource = this.printSources[0].source
+                    localStorage.setItem("printSource", this.printSource)
+                }
+                this.switchContent(this.printSource)
+            }
+        })
+    </script>
+</body>
+</html>
