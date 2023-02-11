@@ -21,14 +21,18 @@ namespace CsharpHardware.print
         public override void InitPrinterAndPaper()
         {
             var printerName = PrintUtil.GetLocalPrinters()[printModel.printerIndex];
+            // 设置打印机名称
             pd.PrinterSettings.PrinterName = printerName;
+            // 根据打印内容计算高度
             CalcLines();
-            var height = lineHeight * graphicsDecoration.LineCount - 50;
+            var height = lineHeight * graphicsDecoration.LineCount - 60;
+            // 创建新纸张类型
             var newPaperSize = new PaperSize("程序自定义纸张", 135, height)
             {
                 RawKind = (int)PaperKind.Custom
             };
             pd.DefaultPageSettings.Margins = new Margins(2, 2, 5, 5);
+            // 设置自定义纸张
             pd.DefaultPageSettings.PaperSize = newPaperSize;
             Console.WriteLine("新纸张:" + newPaperSize);
         }
