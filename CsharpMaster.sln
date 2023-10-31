@@ -5,6 +5,8 @@ VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsharpHardware", "CsharpHardware\CsharpHardware.csproj", "{208913E9-A7C7-4CFB-BE96-4B9633D93557}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsharpWpf", "CsharpWpf\CsharpWpf.csproj", "{A81122EE-9731-4DAC-A536-1870701CEA11}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{208913E9-A7C7-4CFB-BE96-4B9633D93557}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{208913E9-A7C7-4CFB-BE96-4B9633D93557}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{208913E9-A7C7-4CFB-BE96-4B9633D93557}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A81122EE-9731-4DAC-A536-1870701CEA11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A81122EE-9731-4DAC-A536-1870701CEA11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A81122EE-9731-4DAC-A536-1870701CEA11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A81122EE-9731-4DAC-A536-1870701CEA11}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
